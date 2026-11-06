@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Reino dos Elementos</title>
+
+<style>
+
+  body {
+    font-family: Arial, sans-serif;
+    background: #1d2433;
+    color: white;
+    max-width: 460px;
+    margin: 20px auto;
+    text-align: center;
+  }
+  .caixa {
+    background: #38425c;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 10px 0;
+  }
+  .emoji { font-size: 50px; }
+  button {
+    font-size: 15px;
+    padding: 10px;
+    margin: 4px;
+    cursor: pointer;
+  }
+  #mensagens {
+    background: black;
+    height: 150px;
+    overflow-y: auto;
+    text-align: left;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  #regras {
+    font-size: 14px;
+    text-align: left;
+    display: inline-block;
+  }
+</style>
+</head>
+
+<body>
+
+  <h1>🌍 Reino dos Elementos</h1>
+
+  <div id="telaEscolha">
+    <h2 id="tituloBatalha"></h2>
+
+    <div class="caixa">
+      <div>Inimigo desta batalha:</div>
+      <div class="emoji" id="emojiInimigoPreview"></div>
+      <div id="infoInimigoPreview"></div>
+    </div>
+
+    <h3>Escolha sua criatura:</h3>
+    <div id="botoesCriaturas"></div>
+
+    <h3>Regras dos elementos</h3>
+    <div id="regras">
+      🔥 Fogo vence 🌿 Natureza<br>
+      🌿 Natureza vence ⚡ Raio<br>
+      ⚡ Raio vence 💧 Água<br>
+      💧 Água vence 🪨 Terra<br>
+      🪨 Terra vence 🔥 Fogo
+    </div>
+  </div>
+
+  <div id="telaBatalha" style="display:none">
+
+    <div class="caixa">
+      <div class="emoji" id="emojiJogador"></div>
+      <div><span id="nomeJogador"></span> (<span id="elementoJogador"></span>)</div>
+      <div>Vida: <span id="vidaJogador"></span></div>
+      <div>Ataque: <span id="ataqueJogador"></span> | Defesa: <span id="defesaJogador"></span></div>
+    </div>
+
+    <div class="caixa">
+      <div class="emoji" id="emojiInimigo"></div>
+      <div><span id="nomeInimigo"></span> (<span id="elementoInimigo"></span>)</div>
+      <div>Vida: <span id="vidaInimigo"></span></div>
+    </div>
+
+    <button id="btnAtacar" onclick="atacar()">⚔️ Atacar</button>
+    <button id="btnEspecial" onclick="usarEspecial()">✨ Especial</button>
+    <button id="btnDefender" onclick="defender()">🛡️ Defender</button>
+
+    <div id="mensagens"></div>
+
+    <button id="btnProxima" onclick="proximaBatalha()" style="display:none">➡️ Próxima batalha</button>
+    <button id="btnReiniciar" onclick="reiniciar()" style="display:none">🔄 Jogar de novo</button>
+  </div>
+
+<script>
+
+let criaturas = [
+  { nome: "Lobo Flamejante",    evolucao: "Lobo Infernal",     emoji: "🐺",
+    elemento: "Fogo",     emojiElemento: "🔥", vence: "Natureza", fraco: "Terra",
+    hp: 90,  ataque: 24, defesa: 4, especial: "Chama Ardente" },
+
+  { nome: "Tartaruga Rochosa",  evolucao: "Colosso de Pedra",  emoji: "🐢",
+    elemento: "Terra",    emojiElemento: "🪨", vence: "Fogo",     fraco: "Água",
+    hp: 120, ataque: 18, defesa: 8, especial: "Casco de Pedra" },
+
+  { nome: "Serpente das Marés", evolucao: "Dragão Oceânico",   emoji: "🐍",
+    elemento: "Água",     emojiElemento: "💧", vence: "Terra",    fraco: "Raio",
+    hp: 100, ataque: 21, defesa: 5, especial: "Onda Enfraquecedora" },
+
+  { nome: "Falcão Trovejante",  evolucao: "Águia Tempestade",  emoji: "🦅",
+    elemento: "Raio",     emojiElemento: "⚡", vence: "Água",     fraco: "Natureza",
+    hp: 85,  ataque: 23, defesa: 4, especial: "Golpe Veloz" },
+
+  { nome: "Tigre Esmeralda",    evolucao: "Tigre Ancestral",   emoji: "🐯",
+    elemento: "Natureza", emojiElemento: "🌿", vence: "Raio",     fraco: "Fogo",
+    hp: 100, ataque: 22, defesa: 5, especial: "Vinhas Prisioneiras" }
+];
+
+let batalhas = [
+  { local: "Floresta Encantada",   inimigo: 4 },
+  { local: "Deserto Vulcânico",    inimigo: 0 },
+  { local: "Montanhas de Cristal", inimigo: 1 },
+  { local: "Oceano Mágico",        inimigo: 2 },
+  { local: "Céu da Tempestade",    inimigo: 3 }
+];
+
+let numeroBatalha = 0;
+
+let jogadorCriatura;
+let jogadorHp = 0;
+let jogadorHpMax = 0;
+let jogadorAtaque = 0;
+let jogadorDefesa = 0;
+
+let inimigoCriatura;
+let inimigoHp = 0;
+let inimigoHpMax = 0;
+let inimigoAtaque = 0;
+let inimigoDefesa = 0;
+
+let especialUsos = 2;
+let defendendo = false;
+let inimigoPreso = false;
+let queimadura = 0;
+let batalhaAcabou = false;
+
+function escrever(mensagem) {
+  let area = document.getElementById("mensagens");
+  area.innerHTML = area.innerHTML + "<p>" + mensagem + "</p>";
+  area.scrollTop = area.scrollHeight;
+}
+
+function nomeDaCriatura(criatura) {
+  if (numeroBatalha >= 3) {
+    return criatura.evolucao;
+  } else {
+    return criatura.nome;
+  }
+}
+
+function multiplicador(atacante, defensor) {
+  if (atacante.vence == defensor.elemento) {
+    return 1.5;
+  } else if (atacante.fraco == defensor.elemento) {
+    return 0.5;
+  } else {
+    return 1;
+  }
+}
+
+function textoEfetividade(mult) {
+  if (mult == 1.5) {
+    return " Super efetivo!";
+  } else if (mult == 0.5) {
+    return " Não foi muito efetivo...";
+  } else {
+    return "";
+  }
+}
+
+function calcularDano(ataque, defesa, mult) {
+  let dano = Math.round(ataque * mult) - defesa;
+  if (dano < 2) {
+    dano = 2;
+  }
+  return dano;
+}
+
+function mostrarTelaEscolha() {
+  let batalha = batalhas[numeroBatalha];
+  let inimigo = criaturas[batalha.inimigo];
+
+  document.getElementById("tituloBatalha").textContent =
+    "Batalha " + (numeroBatalha + 1) + "/5 - " + batalha.local;
+  document.getElementById("emojiInimigoPreview").textContent = inimigo.emoji;
+  document.getElementById("infoInimigoPreview").textContent =
+    inimigo.nome + " (" + inimigo.emojiElemento + " " + inimigo.elemento + ")";
+
+  let html = "";
+  for (let i = 0; i < criaturas.length; i++) {
+    let c = criaturas[i];
+    html = html + "<button onclick='escolherCriatura(" + i + ")'>" +
+           c.emoji + " " + nomeDaCriatura(c) + "<br>" +
+           c.emojiElemento + " " + c.elemento + "</button>";
+  }
+  document.getElementById("botoesCriaturas").innerHTML = html;
+
+  document.getElementById("telaEscolha").style.display = "block";
+  document.getElementById("telaBatalha").style.display = "none";
+}
+
+function escolherCriatura(indice) {
+  let batalha = batalhas[numeroBatalha];
+
+  jogadorCriatura = criaturas[indice];
+  jogadorHpMax = jogadorCriatura.hp + numeroBatalha * 5;
+  jogadorAtaque = jogadorCriatura.ataque + numeroBatalha * 2;
+  jogadorDefesa = jogadorCriatura.defesa + numeroBatalha * 1;
+
+  if (numeroBatalha >= 3) {
+    jogadorHpMax = jogadorHpMax + 15;
+    jogadorAtaque = jogadorAtaque + 5;
+    jogadorDefesa = jogadorDefesa + 3;
+  }
+  jogadorHp = jogadorHpMax;
+
+  inimigoCriatura = criaturas[batalha.inimigo];
+  inimigoHpMax = inimigoCriatura.hp + numeroBatalha * 12;
+  inimigoAtaque = inimigoCriatura.ataque + numeroBatalha * 3;
+  inimigoDefesa = inimigoCriatura.defesa + numeroBatalha;
+  inimigoHp = inimigoHpMax;
+
+  especialUsos = 2;
+  defendendo = false;
+  inimigoPreso = false;
+  queimadura = 0;
+  batalhaAcabou = false;
+
+  document.getElementById("mensagens").innerHTML = "";
+  document.getElementById("btnProxima").style.display = "none";
+  document.getElementById("btnReiniciar").style.display = "none";
+  escrever("⚔️ A batalha começou em " + batalha.local + "!");
+
+  document.getElementById("telaEscolha").style.display = "none";
+  document.getElementById("telaBatalha").style.display = "block";
+  atualizarTela();
+}
+
+function atualizarTela() {
+  document.getElementById("emojiJogador").textContent = jogadorCriatura.emoji;
+  document.getElementById("nomeJogador").textContent = nomeDaCriatura(jogadorCriatura);
+  document.getElementById("elementoJogador").textContent =
+    jogadorCriatura.emojiElemento + " " + jogadorCriatura.elemento;
+  document.getElementById("vidaJogador").textContent = jogadorHp + "/" + jogadorHpMax + " HP";
+  document.getElementById("ataqueJogador").textContent = jogadorAtaque;
+  document.getElementById("defesaJogador").textContent = jogadorDefesa;
+
+  document.getElementById("emojiInimigo").textContent = inimigoCriatura.emoji;
+  document.getElementById("nomeInimigo").textContent = inimigoCriatura.nome;
+  document.getElementById("elementoInimigo").textContent =
+    inimigoCriatura.emojiElemento + " " + inimigoCriatura.elemento;
+  document.getElementById("vidaInimigo").textContent = inimigoHp + "/" + inimigoHpMax + " HP";
+
+  document.getElementById("btnEspecial").textContent =
+    "✨ " + jogadorCriatura.especial + " (" + especialUsos + ")";
+
+  document.getElementById("btnAtacar").disabled = batalhaAcabou;
+  document.getElementById("btnDefender").disabled = batalhaAcabou;
+  document.getElementById("btnEspecial").disabled = batalhaAcabou || especialUsos == 0;
+}
+
+function atacar() {
+  let mult = multiplicador(jogadorCriatura, inimigoCriatura);
+  let dano = calcularDano(jogadorAtaque, inimigoDefesa, mult);
+  inimigoHp = inimigoHp - dano;
+  escrever("⚔️ Você atacou e causou " + dano + " de dano!" + textoEfetividade(mult));
+  fimDoTurnoDoJogador();
+}
+
+function defender() {
+  defendendo = true;
+  escrever("🛡️ Você está se defendendo (recebe metade do dano).");
+  fimDoTurnoDoJogador();
+}
+
+function usarEspecial() {
+  let mult = multiplicador(jogadorCriatura, inimigoCriatura);
+  let dano = calcularDano(jogadorAtaque, inimigoDefesa, mult);
+  especialUsos = especialUsos - 1;
+
+  if (jogadorCriatura.elemento == "Fogo") {
+    inimigoHp = inimigoHp - dano;
+    queimadura = 3;
+    escrever("🔥 Chama Ardente! " + dano + " de dano e o inimigo está queimando!" + textoEfetividade(mult));
+
+  } else if (jogadorCriatura.elemento == "Terra") {
+    jogadorHp = jogadorHp + 30;
+    if (jogadorHp > jogadorHpMax) {
+      jogadorHp = jogadorHpMax;
+    }
+    escrever("🪨 Casco de Pedra! Você recuperou 30 de vida.");
+
+  } else if (jogadorCriatura.elemento == "Água") {
+    inimigoHp = inimigoHp - dano;
+    inimigoAtaque = inimigoAtaque - 4;
+    if (inimigoAtaque < 1) {
+      inimigoAtaque = 1;
+    }
+    escrever("💧 Onda Enfraquecedora! " + dano + " de dano e o ataque do inimigo diminuiu!" + textoEfetividade(mult));
+
+  } else if (jogadorCriatura.elemento == "Raio") {
+    inimigoHp = inimigoHp - dano * 2;
+    escrever("⚡ Golpe Veloz! Dois ataques, " + (dano * 2) + " de dano no total!" + textoEfetividade(mult));
+
+  } else if (jogadorCriatura.elemento == "Natureza") {
+    inimigoHp = inimigoHp - dano;
+    inimigoPreso = true;
+    escrever("🌿 Vinhas Prisioneiras! " + dano + " de dano e o inimigo perde o próximo turno!" + textoEfetividade(mult));
+  }
+
+  fimDoTurnoDoJogador();
+}
+
+function fimDoTurnoDoJogador() {
+  if (inimigoHp <= 0) {
+    inimigoHp = 0;
+    venceuBatalha();
+  } else {
+    turnoDoInimigo();
+  }
+  atualizarTela();
+}
+
+function turnoDoInimigo() {
+
+  if (queimadura > 0) {
+    inimigoHp = inimigoHp - 8;
+    queimadura = queimadura - 1;
+    escrever("🔥 A queimadura causou 8 de dano!");
+    if (inimigoHp <= 0) {
+      inimigoHp = 0;
+      venceuBatalha();
+      return;
+    }
+  }
+
+  if (inimigoPreso == true) {
+    inimigoPreso = false;
+    defendendo = false;
+    escrever("🌿 O inimigo está preso e não consegue atacar!");
+    return;
+  }
+
+  let mult = multiplicador(inimigoCriatura, jogadorCriatura);
+  let dano = calcularDano(inimigoAtaque, jogadorDefesa, mult);
+
+  if (defendendo == true) {
+    dano = Math.floor(dano / 2);
+    defendendo = false;
+  }
+
+  jogadorHp = jogadorHp - dano;
+  escrever("💥 " + inimigoCriatura.nome + " atacou e causou " + dano + " de dano!" + textoEfetividade(mult));
+
+  if (jogadorHp <= 0) {
+    jogadorHp = 0;
+    batalhaAcabou = true;
+    escrever("☠️ Sua criatura foi derrotada! Fim de jogo.");
+    document.getElementById("btnReiniciar").style.display = "inline-block";
+  }
+}
+
+function venceuBatalha() {
+  batalhaAcabou = true;
+  escrever("🎉 Você derrotou " + inimigoCriatura.nome + "!");
+  numeroBatalha = numeroBatalha + 1;
+
+  if (numeroBatalha == batalhas.length) {
+    escrever("🏆 PARABÉNS! Você é o Guardião Supremo dos Elementos!");
+    document.getElementById("btnReiniciar").style.display = "inline-block";
+    return;
+  }
+
+  escrever("⭐ Suas criaturas ficaram mais fortes!");
+
+  if (numeroBatalha == 3) {
+    escrever("✨ EVOLUÇÃO! Suas criaturas evoluíram:");
+    for (let i = 0; i < criaturas.length; i++) {
+      escrever(criaturas[i].nome + " → " + criaturas[i].evolucao);
+    }
+  }
+
+  document.getElementById("btnProxima").style.display = "inline-block";
+}
+
+function proximaBatalha() {
+  mostrarTelaEscolha();
+}
+
+function reiniciar() {
+  numeroBatalha = 0;
+  mostrarTelaEscolha();
+}
+
+mostrarTelaEscolha();
+</script>
+
+</body>
+</html>
