@@ -2,411 +2,437 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Reino dos Elementos</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reino dos Elementos - Arena</title>
 <style>
-
-  body {
-    font-family: Arial, sans-serif;
-    background: #1d2433;
-    color: white;
-    max-width: 460px;
-    margin: 20px auto;
-    text-align: center;
-  }
-  .caixa {
-    background: #38425c;
-    border-radius: 8px;
-    padding: 10px;
-    margin: 10px 0;
-  }
-  .emoji { font-size: 50px; }
-  button {
-    font-size: 15px;
-    padding: 10px;
-    margin: 4px;
-    cursor: pointer;
-  }
-  #mensagens {
-    background: black;
-    height: 150px;
-    overflow-y: auto;
-    text-align: left;
-    padding: 8px;
-    border-radius: 8px;
-    font-size: 14px;
-  }
-  #regras {
-    font-size: 14px;
-    text-align: left;
-    display: inline-block;
-  }
+:root { --bg1: #3b2a7a; --bg2: #7ec8ff; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; color: white; font-family: "Trebuchet MS", "Comic Sans MS", sans-serif; background: linear-gradient(160deg, var(--bg1), var(--bg2)) fixed; }
+#app { max-width: 760px; margin: 0 auto; padding: 12px; text-align: center; }
+.escondida { display: none !important; }
+h1 { font-size: 40px; margin: 18px 0 6px; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
+.caixa { background: rgba(0,0,0,.3); border-radius: 18px; padding: 12px 16px; margin: 10px auto; max-width: 560px; font-size: 18px; line-height: 1.7; text-align: left; }
+.botao { font-family: inherit; font-size: 24px; font-weight: 800; padding: 12px 34px; border: none; border-radius: 999px; background: linear-gradient(#ffe066, #ff9800); color: #4a2c00; box-shadow: 0 6px 0 #b36b00; cursor: pointer; margin: 8px; }
+.botao:active { transform: translateY(4px); box-shadow: 0 2px 0 #b36b00; }
+kbd { background: #fff; color: #333; border-radius: 6px; padding: 1px 8px; font-weight: 800; box-shadow: 0 2px 0 #999; }
+.selo { display: inline-block; padding: 2px 12px; border-radius: 999px; font-weight: 800; color: white; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+#cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 8px; margin-top: 10px; }
+.card { background: rgba(255,255,255,.2); border: 3px solid transparent; border-radius: 16px; padding: 8px 6px; cursor: pointer; font-size: 13px; line-height: 1.4; transition: transform .15s; }
+.card:hover { transform: translateY(-5px); }
+.card .emoji { font-size: 46px; }
+.card.forte { border-color: #69f0ae; box-shadow: 0 0 14px #69f0ae; }
+.card.fraco { border-color: #ff8a80; opacity: .88; }
+.hud { display: flex; gap: 10px; margin: 6px 0; }
+.hud div { flex: 1; font-weight: 800; font-size: 15px; }
+.barra { height: 20px; background: rgba(0,0,0,.5); border: 2px solid rgba(255,255,255,.5); border-radius: 999px; overflow: hidden; }
+.barra i { display: block; height: 100%; width: 100%; background: linear-gradient(#69f0ae, #2e9e5b); transition: width .15s; }
+#barraE i { background: linear-gradient(#ff6b6b, #c62828); }
+#barraEsp i { background: linear-gradient(#ffe066, #ff9800); width: 0; }
+#arena { position: relative; height: 300px; margin-top: 8px; border-radius: 20px; overflow: hidden; border: 4px solid rgba(255,255,255,.6); background: linear-gradient(rgba(255,255,255,.12), rgba(0,0,0,.35)); }
+.faixa { position: absolute; left: 0; right: 0; height: 2px; background: repeating-linear-gradient(90deg, rgba(255,255,255,.5) 0 14px, transparent 14px 28px); }
+.lutador { position: absolute; font-size: 74px; transform: translate(-50%, -50%); transition: top .15s; filter: drop-shadow(0 0 16px var(--cor, #fff)); z-index: 2; }
+#jog { left: 10%; --dir: -1; }
+#ini { left: 90%; --dir: 1; }
+.lutador span { display: inline-block; animation: bob 1s ease-in-out infinite; }
+#jog span { transform: scaleX(-1); }
+.lutador.tremer span { animation: tremer .3s; }
+.tiro { position: absolute; font-size: 34px; transform: translate(-50%, -50%); z-index: 1; filter: drop-shadow(0 0 8px white); transition: top .15s; }
+.dano { position: absolute; font-size: 28px; font-weight: 900; color: #fff176; text-shadow: 0 2px 0 #b71c1c; transform: translate(-50%, -50%); animation: subir .8s forwards; z-index: 3; }
+#status { position: absolute; top: 6px; font-size: 22px; z-index: 3; }
+#contagem { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 80px; font-weight: 900; text-shadow: 0 4px 0 rgba(0,0,0,.5); z-index: 5; }
+#dica { margin-top: 8px; font-size: 15px; }
+.overlay { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.72); padding: 14px; }
+.painel { width: 100%; max-width: 420px; padding: 20px; background: #2b2350; border: 4px solid #ffe066; border-radius: 26px; font-size: 18px; line-height: 1.5; }
+.painel h2 { margin: 0 0 8px; font-size: 30px; }
+@keyframes bob { 0%, 100% { margin-top: 0; } 50% { margin-top: -8px; } }
+@keyframes tremer { 0%, 100% { margin-left: 0; } 25% { margin-left: -14px; } 75% { margin-left: 14px; } }
+@keyframes subir { to { transform: translate(-50%, -120px); opacity: 0; } }
 </style>
 </head>
-
 <body>
+<div id="app">
 
-  <h1>🌍 Reino dos Elementos</h1>
-
-  <div id="telaEscolha">
-    <h2 id="tituloBatalha"></h2>
-
+  <section id="menu">
+    <h1>⚔️ Reino dos Elementos ⚔️</h1>
+    <div style="font-size:48px">🐺 🐢 🐍 🦅 🐯</div>
     <div class="caixa">
-      <div>Inimigo desta batalha:</div>
-      <div class="emoji" id="emojiInimigoPreview"></div>
-      <div id="infoInimigoPreview"></div>
+      <b>Como jogar:</b><br>
+      👀 Veja o inimigo e <b>escolha o bichinho certo</b> para enfrentá-lo.<br>
+      <kbd>↑</kbd> <kbd>↓</kbd> (ou <kbd>W</kbd> <kbd>S</kbd>) mudam de faixa e desviam dos tiros.<br>
+      <kbd>ESPAÇO</kbd> atira. Segure para atirar sem parar!<br>
+      <kbd>E</kbd> usa o SUPER quando a barra ⭐ encher.<br>
+      🔥➡️🌿➡️⚡➡️💧➡️🪨➡️🔥 (a setinha quer dizer "ganha de")
     </div>
+    <button class="botao" id="btnJogar">▶️ JOGAR</button>
+  </section>
 
-    <h3>Escolha sua criatura:</h3>
-    <div id="botoesCriaturas"></div>
+  <section id="selecao" class="escondida">
+    <h2 id="selTitulo"></h2>
+    <div class="caixa" style="text-align:center">
+      <div style="font-size:70px" id="selEmoji"></div>
+      <b id="selNome"></b> <span class="selo" id="selElemento"></span><br>
+      <span id="selDica"></span>
+    </div>
+    <h3>Quem você escolhe para esta luta?</h3>
+    <div id="cards"></div>
+  </section>
 
-    <h3>Regras dos elementos</h3>
-    <div id="regras">
-      🔥 Fogo vence 🌿 Natureza<br>
-      🌿 Natureza vence ⚡ Raio<br>
-      ⚡ Raio vence 💧 Água<br>
-      💧 Água vence 🪨 Terra<br>
-      🪨 Terra vence 🔥 Fogo
+  <section id="luta" class="escondida">
+    <div class="hud">
+      <div>🐾 <span id="nomeJ"></span><div class="barra" id="barraJ"><i></i></div></div>
+      <div>👾 <span id="nomeE"></span><div class="barra" id="barraE"><i></i></div></div>
+    </div>
+    <div class="hud"><div>⭐ Super (tecla E)<div class="barra" id="barraEsp"><i></i></div></div></div>
+    <div id="arena">
+      <div class="faixa" style="top:20%"></div><div class="faixa" style="top:50%"></div><div class="faixa" style="top:80%"></div>
+      <div class="lutador" id="jog"><span></span></div>
+      <div class="lutador" id="ini"><span></span></div>
+      <div id="status"></div>
+      <div id="contagem"></div>
+    </div>
+    <div id="dica">⬆️⬇️ mover &nbsp; ESPAÇO atirar &nbsp; E super</div>
+  </section>
+
+  <div id="resultado" class="overlay escondida">
+    <div class="painel">
+      <h2 id="resTitulo"></h2>
+      <div id="resEstrelas" style="font-size:40px"></div>
+      <div id="resTexto"></div>
+      <button class="botao" id="resBotao"></button>
     </div>
   </div>
-
-  <div id="telaBatalha" style="display:none">
-
-    <div class="caixa">
-      <div class="emoji" id="emojiJogador"></div>
-      <div><span id="nomeJogador"></span> (<span id="elementoJogador"></span>)</div>
-      <div>Vida: <span id="vidaJogador"></span></div>
-      <div>Ataque: <span id="ataqueJogador"></span> | Defesa: <span id="defesaJogador"></span></div>
-    </div>
-
-    <div class="caixa">
-      <div class="emoji" id="emojiInimigo"></div>
-      <div><span id="nomeInimigo"></span> (<span id="elementoInimigo"></span>)</div>
-      <div>Vida: <span id="vidaInimigo"></span></div>
-    </div>
-
-    <button id="btnAtacar" onclick="atacar()">⚔️ Atacar</button>
-    <button id="btnEspecial" onclick="usarEspecial()">✨ Especial</button>
-    <button id="btnDefender" onclick="defender()">🛡️ Defender</button>
-
-    <div id="mensagens"></div>
-
-    <button id="btnProxima" onclick="proximaBatalha()" style="display:none">➡️ Próxima batalha</button>
-    <button id="btnReiniciar" onclick="reiniciar()" style="display:none">🔄 Jogar de novo</button>
-  </div>
+</div>
 
 <script>
+const EL = {
+  "Fogo": { e: "🔥", c: "#ff6b3d" }, "Natureza": { e: "🌿", c: "#43c463" },
+  "Raio": { e: "⚡", c: "#ffd23f" }, "Água": { e: "💧", c: "#3fa9f5" }, "Terra": { e: "🪨", c: "#b8855a" }
+};
+const ORDEM = ["Fogo", "Natureza", "Raio", "Água", "Terra"];
 
-let criaturas = [
-  { nome: "Lobo Flamejante",    evolucao: "Lobo Infernal",     emoji: "🐺",
-    elemento: "Fogo",     emojiElemento: "🔥", vence: "Natureza", fraco: "Terra",
-    hp: 90,  ataque: 24, defesa: 4, especial: "Chama Ardente" },
-
-  { nome: "Tartaruga Rochosa",  evolucao: "Colosso de Pedra",  emoji: "🐢",
-    elemento: "Terra",    emojiElemento: "🪨", vence: "Fogo",     fraco: "Água",
-    hp: 120, ataque: 18, defesa: 8, especial: "Casco de Pedra" },
-
-  { nome: "Serpente das Marés", evolucao: "Dragão Oceânico",   emoji: "🐍",
-    elemento: "Água",     emojiElemento: "💧", vence: "Terra",    fraco: "Raio",
-    hp: 100, ataque: 21, defesa: 5, especial: "Onda Enfraquecedora" },
-
-  { nome: "Falcão Trovejante",  evolucao: "Águia Tempestade",  emoji: "🦅",
-    elemento: "Raio",     emojiElemento: "⚡", vence: "Água",     fraco: "Natureza",
-    hp: 85,  ataque: 23, defesa: 4, especial: "Golpe Veloz" },
-
-  { nome: "Tigre Esmeralda",    evolucao: "Tigre Ancestral",   emoji: "🐯",
-    elemento: "Natureza", emojiElemento: "🌿", vence: "Raio",     fraco: "Fogo",
-    hp: 100, ataque: 22, defesa: 5, especial: "Vinhas Prisioneiras" }
+const CRI = [
+  { nome: "Lobo Flamejante", emoji: "🐺", el: "Fogo", hp: 100, dano: 9, cd: 550, esp: "Chamas: queima o inimigo por 4s", jeito: "Atira rápido" },
+  { nome: "Tartaruga Rochosa", emoji: "🐢", el: "Terra", hp: 150, dano: 8, cd: 850, esp: "Casco de Pedra: cura 35% da vida", jeito: "Muita vida, atira devagar" },
+  { nome: "Serpente das Marés", emoji: "🐍", el: "Água", hp: 115, dano: 9, cd: 700, esp: "Maré: deixa o inimigo lento por 5s", jeito: "Equilibrada" },
+  { nome: "Falcão Trovejante", emoji: "🦅", el: "Raio", hp: 90, dano: 8, cd: 450, esp: "Tempestade: raios nas 3 faixas", jeito: "Atira muito rápido, pouca vida" },
+  { nome: "Tigre Esmeralda", emoji: "🐯", el: "Natureza", hp: 110, dano: 11, cd: 750, esp: "Vinhas: prende o inimigo por 2,5s", jeito: "Tiros fortes" }
 ];
 
-let batalhas = [
-  { local: "Floresta Encantada",   inimigo: 4 },
-  { local: "Deserto Vulcânico",    inimigo: 0 },
-  { local: "Montanhas de Cristal", inimigo: 1 },
-  { local: "Oceano Mágico",        inimigo: 2 },
-  { local: "Céu da Tempestade",    inimigo: 3 }
+const BAT = [
+  { local: "Floresta Encantada", cores: ["#1b5e20", "#66bb6a"], nome: "Tigre Esmeralda", emoji: "🐯", el: "Natureza", hp: 90, dano: 6, cd: 1300, mira: 0.35, esq: 0.05 },
+  { local: "Deserto Vulcânico", cores: ["#7f1d1d", "#ff8a3d"], nome: "Lobo Flamejante", emoji: "🐺", el: "Fogo", hp: 120, dano: 7, cd: 1200, mira: 0.45, esq: 0.1 },
+  { local: "Montanhas de Cristal", cores: ["#3b2a7a", "#7ec8ff"], nome: "Tartaruga Rochosa", emoji: "🐢", el: "Terra", hp: 150, dano: 8, cd: 1100, mira: 0.5, esq: 0.15 },
+  { local: "Oceano Mágico", cores: ["#0b3d91", "#4dd0e1"], nome: "Serpente das Marés", emoji: "🐍", el: "Água", hp: 180, dano: 9, cd: 1000, mira: 0.55, esq: 0.25 },
+  { local: "Céu da Tempestade", cores: ["#1f2340", "#f5c542"], nome: "Falcão Trovejante", emoji: "🦅", el: "Raio", hp: 210, dano: 10, cd: 900, mira: 0.6, esq: 0.3 },
+  { local: "Castelo do Guardião", cores: ["#3a0f5c", "#f5b700"], nome: "Guardião Supremo", emoji: "🐲", el: "Fogo", hp: 300, dano: 11, cd: 800, mira: 0.7, esq: 0.4, boss: true }
 ];
 
-let numeroBatalha = 0;
+const FAIXAS = [20, 50, 80];
+let nBat = 0;
+let s = null;
+const teclas = {};
+let somLigado = true;
+let audio = null;
 
-let jogadorCriatura;
-let jogadorHp = 0;
-let jogadorHpMax = 0;
-let jogadorAtaque = 0;
-let jogadorDefesa = 0;
+function $(id) { return document.getElementById(id); }
 
-let inimigoCriatura;
-let inimigoHp = 0;
-let inimigoHpMax = 0;
-let inimigoAtaque = 0;
-let inimigoDefesa = 0;
-
-let especialUsos = 2;
-let defendendo = false;
-let inimigoPreso = false;
-let queimadura = 0;
-let batalhaAcabou = false;
-
-function escrever(mensagem) {
-  let area = document.getElementById("mensagens");
-  area.innerHTML = area.innerHTML + "<p>" + mensagem + "</p>";
-  area.scrollTop = area.scrollHeight;
+function tocar(freq, dur, tipo, atraso) {
+  if (!somLigado) { return; }
+  try {
+    if (!audio) { audio = new (window.AudioContext || window.webkitAudioContext)(); }
+    const o = audio.createOscillator();
+    const g = audio.createGain();
+    const ini = audio.currentTime + (atraso || 0);
+    o.type = tipo || "square";
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.06, ini);
+    g.gain.exponentialRampToValueAtTime(0.001, ini + dur);
+    o.connect(g);
+    g.connect(audio.destination);
+    o.start(ini);
+    o.stop(ini + dur);
+  } catch (erro) { somLigado = false; }
 }
 
-function nomeDaCriatura(criatura) {
-  if (numeroBatalha >= 3) {
-    return criatura.evolucao;
-  } else {
-    return criatura.nome;
-  }
+function forca(atacante, alvo) {
+  const i = ORDEM.indexOf(atacante);
+  if (ORDEM[(i + 1) % 5] === alvo) { return 1.5; }
+  if (ORDEM[(i + 4) % 5] === alvo) { return 0.5; }
+  return 1;
 }
 
-function multiplicador(atacante, defensor) {
-  if (atacante.vence == defensor.elemento) {
-    return 1.5;
-  } else if (atacante.fraco == defensor.elemento) {
-    return 0.5;
-  } else {
-    return 1;
-  }
+function mostrar(id) {
+  ["menu", "selecao", "luta"].forEach(function (t) { $(t).classList.toggle("escondida", t !== id); });
 }
 
-function textoEfetividade(mult) {
-  if (mult == 1.5) {
-    return " Super efetivo!";
-  } else if (mult == 0.5) {
-    return " Não foi muito efetivo...";
-  } else {
-    return "";
-  }
+function aplicarCores(b) {
+  document.body.style.setProperty("--bg1", b.cores[0]);
+  document.body.style.setProperty("--bg2", b.cores[1]);
 }
 
-function calcularDano(ataque, defesa, mult) {
-  let dano = Math.round(ataque * mult) - defesa;
-  if (dano < 2) {
-    dano = 2;
-  }
-  return dano;
+function selo(el) {
+  return '<span class="selo" style="background:' + EL[el].c + '">' + EL[el].e + " " + el + "</span>";
 }
 
-function mostrarTelaEscolha() {
-  let batalha = batalhas[numeroBatalha];
-  let inimigo = criaturas[batalha.inimigo];
-
-  document.getElementById("tituloBatalha").textContent =
-    "Batalha " + (numeroBatalha + 1) + "/5 - " + batalha.local;
-  document.getElementById("emojiInimigoPreview").textContent = inimigo.emoji;
-  document.getElementById("infoInimigoPreview").textContent =
-    inimigo.nome + " (" + inimigo.emojiElemento + " " + inimigo.elemento + ")";
+function mostrarSelecao() {
+  const b = BAT[nBat];
+  aplicarCores(b);
+  $("selTitulo").textContent = "Batalha " + (nBat + 1) + "/" + BAT.length + " - " + b.local;
+  $("selEmoji").textContent = b.emoji;
+  $("selNome").textContent = b.nome;
+  $("selElemento").outerHTML = '<span id="selElemento" class="selo" style="background:' + EL[b.el].c + '">' + EL[b.el].e + " " + b.el + "</span>";
+  $("selDica").textContent = b.boss
+    ? "👑 Ele MUDA de elemento a cada poucos segundos! Escolha quem aguenta mais."
+    : "Ele atira a cada " + (b.cd / 1000).toFixed(1) + "s. Escolha quem tem vantagem de elemento!";
 
   let html = "";
-  for (let i = 0; i < criaturas.length; i++) {
-    let c = criaturas[i];
-    html = html + "<button onclick='escolherCriatura(" + i + ")'>" +
-           c.emoji + " " + nomeDaCriatura(c) + "<br>" +
-           c.emojiElemento + " " + c.elemento + "</button>";
+  for (let i = 0; i < CRI.length; i++) {
+    const c = CRI[i];
+    const f = b.boss ? 1 : forca(c.el, b.el);
+    const classe = f > 1 ? "forte" : f < 1 ? "fraco" : "";
+    const tag = b.boss ? "🙂" : f > 1 ? "💪 FORTE contra ele" : f < 1 ? "😬 FRACO contra ele" : "🙂 normal";
+    html += '<div class="card ' + classe + '" data-i="' + i + '"><div class="emoji">' + c.emoji + "</div><b>" + c.nome + "</b><br>" +
+      selo(c.el) + "<br>❤️ " + c.hp + " &nbsp; 💥 " + c.dano + "<br>🔫 " + (1000 / c.cd).toFixed(1) + " tiros/s<br><i>" + c.jeito +
+      "</i><br>⭐ " + c.esp + "<br><b>" + tag + "</b></div>";
   }
-  document.getElementById("botoesCriaturas").innerHTML = html;
-
-  document.getElementById("telaEscolha").style.display = "block";
-  document.getElementById("telaBatalha").style.display = "none";
+  $("cards").innerHTML = html;
+  document.querySelectorAll(".card").forEach(function (el) {
+    el.addEventListener("click", function () { lutar(parseInt(el.dataset.i)); });
+  });
+  mostrar("selecao");
 }
 
-function escolherCriatura(indice) {
-  let batalha = batalhas[numeroBatalha];
-
-  jogadorCriatura = criaturas[indice];
-  jogadorHpMax = jogadorCriatura.hp + numeroBatalha * 5;
-  jogadorAtaque = jogadorCriatura.ataque + numeroBatalha * 2;
-  jogadorDefesa = jogadorCriatura.defesa + numeroBatalha * 1;
-
-  if (numeroBatalha >= 3) {
-    jogadorHpMax = jogadorHpMax + 15;
-    jogadorAtaque = jogadorAtaque + 5;
-    jogadorDefesa = jogadorDefesa + 3;
-  }
-  jogadorHp = jogadorHpMax;
-
-  inimigoCriatura = criaturas[batalha.inimigo];
-  inimigoHpMax = inimigoCriatura.hp + numeroBatalha * 12;
-  inimigoAtaque = inimigoCriatura.ataque + numeroBatalha * 3;
-  inimigoDefesa = inimigoCriatura.defesa + numeroBatalha;
-  inimigoHp = inimigoHpMax;
-
-  especialUsos = 2;
-  defendendo = false;
-  inimigoPreso = false;
-  queimadura = 0;
-  batalhaAcabou = false;
-
-  document.getElementById("mensagens").innerHTML = "";
-  document.getElementById("btnProxima").style.display = "none";
-  document.getElementById("btnReiniciar").style.display = "none";
-  escrever("⚔️ A batalha começou em " + batalha.local + "!");
-
-  document.getElementById("telaEscolha").style.display = "none";
-  document.getElementById("telaBatalha").style.display = "block";
-  atualizarTela();
+function lutar(i) {
+  const c = CRI[i];
+  const b = BAT[nBat];
+  s = {
+    c: c, b: b, rodando: false, proj: [], ultimo: 0, tempoBoss: 0,
+    p: { lane: 1, hp: c.hp, hpMax: c.hp, cd: 0, esp: 0, el: c.el },
+    e: { lane: 1, hp: b.hp, hpMax: b.hp, cd: 800, ia: 600, el: b.el, preso: 0, lento: 0, queima: 0, tick: 0 }
+  };
+  $("nomeJ").textContent = c.emoji + " " + c.nome;
+  $("nomeE").textContent = b.emoji + " " + b.nome;
+  $("jog").querySelector("span").textContent = c.emoji;
+  $("ini").querySelector("span").textContent = b.emoji;
+  $("jog").style.setProperty("--cor", EL[c.el].c);
+  $("ini").style.setProperty("--cor", EL[b.el].c);
+  mostrar("luta");
+  desenhar();
+  contagem(3);
 }
 
-function atualizarTela() {
-  document.getElementById("emojiJogador").textContent = jogadorCriatura.emoji;
-  document.getElementById("nomeJogador").textContent = nomeDaCriatura(jogadorCriatura);
-  document.getElementById("elementoJogador").textContent =
-    jogadorCriatura.emojiElemento + " " + jogadorCriatura.elemento;
-  document.getElementById("vidaJogador").textContent = jogadorHp + "/" + jogadorHpMax + " HP";
-  document.getElementById("ataqueJogador").textContent = jogadorAtaque;
-  document.getElementById("defesaJogador").textContent = jogadorDefesa;
-
-  document.getElementById("emojiInimigo").textContent = inimigoCriatura.emoji;
-  document.getElementById("nomeInimigo").textContent = inimigoCriatura.nome;
-  document.getElementById("elementoInimigo").textContent =
-    inimigoCriatura.emojiElemento + " " + inimigoCriatura.elemento;
-  document.getElementById("vidaInimigo").textContent = inimigoHp + "/" + inimigoHpMax + " HP";
-
-  document.getElementById("btnEspecial").textContent =
-    "✨ " + jogadorCriatura.especial + " (" + especialUsos + ")";
-
-  document.getElementById("btnAtacar").disabled = batalhaAcabou;
-  document.getElementById("btnDefender").disabled = batalhaAcabou;
-  document.getElementById("btnEspecial").disabled = batalhaAcabou || especialUsos == 0;
-}
-
-function atacar() {
-  let mult = multiplicador(jogadorCriatura, inimigoCriatura);
-  let dano = calcularDano(jogadorAtaque, inimigoDefesa, mult);
-  inimigoHp = inimigoHp - dano;
-  escrever("⚔️ Você atacou e causou " + dano + " de dano!" + textoEfetividade(mult));
-  fimDoTurnoDoJogador();
-}
-
-function defender() {
-  defendendo = true;
-  escrever("🛡️ Você está se defendendo (recebe metade do dano).");
-  fimDoTurnoDoJogador();
-}
-
-function usarEspecial() {
-  let mult = multiplicador(jogadorCriatura, inimigoCriatura);
-  let dano = calcularDano(jogadorAtaque, inimigoDefesa, mult);
-  especialUsos = especialUsos - 1;
-
-  if (jogadorCriatura.elemento == "Fogo") {
-    inimigoHp = inimigoHp - dano;
-    queimadura = 3;
-    escrever("🔥 Chama Ardente! " + dano + " de dano e o inimigo está queimando!" + textoEfetividade(mult));
-
-  } else if (jogadorCriatura.elemento == "Terra") {
-    jogadorHp = jogadorHp + 30;
-    if (jogadorHp > jogadorHpMax) {
-      jogadorHp = jogadorHpMax;
-    }
-    escrever("🪨 Casco de Pedra! Você recuperou 30 de vida.");
-
-  } else if (jogadorCriatura.elemento == "Água") {
-    inimigoHp = inimigoHp - dano;
-    inimigoAtaque = inimigoAtaque - 4;
-    if (inimigoAtaque < 1) {
-      inimigoAtaque = 1;
-    }
-    escrever("💧 Onda Enfraquecedora! " + dano + " de dano e o ataque do inimigo diminuiu!" + textoEfetividade(mult));
-
-  } else if (jogadorCriatura.elemento == "Raio") {
-    inimigoHp = inimigoHp - dano * 2;
-    escrever("⚡ Golpe Veloz! Dois ataques, " + (dano * 2) + " de dano no total!" + textoEfetividade(mult));
-
-  } else if (jogadorCriatura.elemento == "Natureza") {
-    inimigoHp = inimigoHp - dano;
-    inimigoPreso = true;
-    escrever("🌿 Vinhas Prisioneiras! " + dano + " de dano e o inimigo perde o próximo turno!" + textoEfetividade(mult));
-  }
-
-  fimDoTurnoDoJogador();
-}
-
-function fimDoTurnoDoJogador() {
-  if (inimigoHp <= 0) {
-    inimigoHp = 0;
-    venceuBatalha();
+function contagem(n) {
+  $("contagem").textContent = n > 0 ? n : "LUTE!";
+  tocar(n > 0 ? 440 : 880, 0.2, "triangle");
+  if (n >= 0) {
+    setTimeout(function () { contagem(n - 1); }, 800);
   } else {
-    turnoDoInimigo();
+    $("contagem").textContent = "";
+    s.rodando = true;
+    s.ultimo = performance.now();
+    requestAnimationFrame(ciclo);
   }
-  atualizarTela();
 }
 
-function turnoDoInimigo() {
+function atirar(dono, lane, el, dano, vx) {
+  const t = document.createElement("div");
+  t.className = "tiro";
+  t.textContent = EL[el].e;
+  $("arena").appendChild(t);
+  s.proj.push({ dono: dono, lane: lane, x: dono === "p" ? 14 : 86, vx: vx, dano: dano, el: el, no: t });
+}
 
-  if (queimadura > 0) {
-    inimigoHp = inimigoHp - 8;
-    queimadura = queimadura - 1;
-    escrever("🔥 A queimadura causou 8 de dano!");
-    if (inimigoHp <= 0) {
-      inimigoHp = 0;
-      venceuBatalha();
-      return;
+function texto(lado, msg) {
+  const d = document.createElement("div");
+  d.className = "dano";
+  d.textContent = msg;
+  d.style.left = (lado === "p" ? 10 : 90) + "%";
+  d.style.top = FAIXAS[lado === "p" ? s.p.lane : s.e.lane] - 12 + "%";
+  $("arena").appendChild(d);
+  setTimeout(function () { d.remove(); }, 800);
+}
+
+function tremer(id) {
+  const el = $(id);
+  el.classList.remove("tremer");
+  void el.offsetWidth;
+  el.classList.add("tremer");
+}
+
+function especial() {
+  const p = s.p;
+  if (p.esp < 100) { return; }
+  p.esp = 0;
+  tocar(500, 0.12, "triangle", 0);
+  tocar(800, 0.2, "triangle", 0.1);
+  if (s.c.el === "Fogo") { s.e.queima = 4000; texto("e", "🔥 Queimando!"); }
+  else if (s.c.el === "Terra") { p.hp = Math.min(p.hpMax, p.hp + p.hpMax * 0.35); texto("p", "💖 +cura"); }
+  else if (s.c.el === "Água") { s.e.lento = 5000; texto("e", "💧 Lento!"); }
+  else if (s.c.el === "Natureza") { s.e.preso = 2500; texto("e", "🌿 Preso!"); }
+  else if (s.c.el === "Raio") { for (let l = 0; l < 3; l++) { atirar("p", l, "Raio", s.c.dano * 1.5, 0.05); } }
+}
+
+function acertou(t) {
+  if (t.dono === "p") {
+    const f = forca(t.el, s.e.el);
+    const d = Math.round(t.dano * f);
+    s.e.hp -= d;
+    s.p.esp = Math.min(100, s.p.esp + 14);
+    texto("e", "-" + d + (f > 1 ? " 💪" : f < 1 ? " 😬" : ""));
+    tremer("ini");
+    tocar(f > 1 ? 600 : 250, 0.12, "sawtooth");
+  } else {
+    const f = forca(t.el, s.p.el);
+    const d = Math.round(t.dano * f);
+    s.p.hp -= d;
+    texto("p", "-" + d);
+    tremer("jog");
+    tocar(120, 0.2, "sawtooth");
+  }
+}
+
+function atualizar(dt) {
+  const p = s.p;
+  const e = s.e;
+  p.cd -= dt;
+  e.cd -= dt;
+  e.ia -= dt;
+  if (e.preso > 0) { e.preso -= dt; }
+  if (e.lento > 0) { e.lento -= dt; }
+  if (e.queima > 0) {
+    e.queima -= dt;
+    e.tick += dt;
+    if (e.tick >= 500) { e.tick = 0; e.hp -= 3; texto("e", "-3 🔥"); }
+  }
+
+  if (teclas[" "] && p.cd <= 0) {
+    atirar("p", p.lane, p.el, s.c.dano, 0.05);
+    p.cd = s.c.cd;
+    tocar(400, 0.06, "square");
+  }
+
+  if (s.b.boss) {
+    s.tempoBoss += dt;
+    if (s.tempoBoss > 7000) {
+      s.tempoBoss = 0;
+      let novo = e.el;
+      while (novo === e.el) { novo = ORDEM[Math.floor(Math.random() * 5)]; }
+      e.el = novo;
+      $("ini").style.setProperty("--cor", EL[novo].c);
+      texto("e", EL[novo].e + " " + novo + "!");
+      tocar(700, 0.2, "triangle");
     }
   }
 
-  if (inimigoPreso == true) {
-    inimigoPreso = false;
-    defendendo = false;
-    escrever("🌿 O inimigo está preso e não consegue atacar!");
-    return;
-  }
-
-  let mult = multiplicador(inimigoCriatura, jogadorCriatura);
-  let dano = calcularDano(inimigoAtaque, jogadorDefesa, mult);
-
-  if (defendendo == true) {
-    dano = Math.floor(dano / 2);
-    defendendo = false;
-  }
-
-  jogadorHp = jogadorHp - dano;
-  escrever("💥 " + inimigoCriatura.nome + " atacou e causou " + dano + " de dano!" + textoEfetividade(mult));
-
-  if (jogadorHp <= 0) {
-    jogadorHp = 0;
-    batalhaAcabou = true;
-    escrever("☠️ Sua criatura foi derrotada! Fim de jogo.");
-    document.getElementById("btnReiniciar").style.display = "inline-block";
-  }
-}
-
-function venceuBatalha() {
-  batalhaAcabou = true;
-  escrever("🎉 Você derrotou " + inimigoCriatura.nome + "!");
-  numeroBatalha = numeroBatalha + 1;
-
-  if (numeroBatalha == batalhas.length) {
-    escrever("🏆 PARABÉNS! Você é o Guardião Supremo dos Elementos!");
-    document.getElementById("btnReiniciar").style.display = "inline-block";
-    return;
-  }
-
-  escrever("⭐ Suas criaturas ficaram mais fortes!");
-
-  if (numeroBatalha == 3) {
-    escrever("✨ EVOLUÇÃO! Suas criaturas evoluíram:");
-    for (let i = 0; i < criaturas.length; i++) {
-      escrever(criaturas[i].nome + " → " + criaturas[i].evolucao);
+  if (e.ia <= 0 && e.preso <= 0) {
+    e.ia = 450 + Math.random() * 300;
+    const perigo = s.proj.some(function (t) { return t.dono === "p" && t.lane === e.lane && t.x > 40; });
+    if (perigo && Math.random() < s.b.esq) {
+      e.lane = (e.lane + 1 + Math.floor(Math.random() * 2)) % 3;
+    } else if (Math.random() < s.b.mira) {
+      e.lane = p.lane;
+    } else {
+      e.lane = Math.floor(Math.random() * 3);
     }
   }
+  if (e.cd <= 0 && e.preso <= 0 && (e.lane === p.lane || Math.random() < 0.02)) {
+    atirar("e", e.lane, e.el, s.b.dano, 0.04);
+    e.cd = s.b.cd * (e.lento > 0 ? 2 : 1);
+  }
 
-  document.getElementById("btnProxima").style.display = "inline-block";
+  for (let i = s.proj.length - 1; i >= 0; i--) {
+    const t = s.proj[i];
+    t.x += (t.dono === "p" ? 1 : -1) * t.vx * dt;
+    let fim = false;
+    if (t.dono === "p" && t.x >= 88) {
+      if (t.lane === e.lane) { acertou(t); }
+      fim = true;
+    } else if (t.dono === "e" && t.x <= 12) {
+      if (t.lane === p.lane) { acertou(t); }
+      fim = true;
+    }
+    if (fim) { t.no.remove(); s.proj.splice(i, 1); }
+  }
+
+  if (e.hp <= 0) { fimLuta(true); }
+  else if (p.hp <= 0) { fimLuta(false); }
 }
 
-function proximaBatalha() {
-  mostrarTelaEscolha();
+function desenhar() {
+  $("jog").style.top = FAIXAS[s.p.lane] + "%";
+  $("ini").style.top = FAIXAS[s.e.lane] + "%";
+  $("barraJ").firstElementChild.style.width = Math.max(0, s.p.hp / s.p.hpMax * 100) + "%";
+  $("barraE").firstElementChild.style.width = Math.max(0, s.e.hp / s.e.hpMax * 100) + "%";
+  $("barraEsp").firstElementChild.style.width = s.p.esp + "%";
+  $("barraEsp").style.boxShadow = s.p.esp >= 100 ? "0 0 14px #ffe066" : "none";
+  for (let i = 0; i < s.proj.length; i++) {
+    s.proj[i].no.style.left = s.proj[i].x + "%";
+    s.proj[i].no.style.top = FAIXAS[s.proj[i].lane] + "%";
+  }
+  let st = "";
+  if (s.e.queima > 0) { st += "🔥"; }
+  if (s.e.lento > 0) { st += "💧"; }
+  if (s.e.preso > 0) { st += "🌿"; }
+  $("status").style.right = "10px";
+  $("status").textContent = st + " " + EL[s.e.el].e + " " + s.e.el;
 }
 
-function reiniciar() {
-  numeroBatalha = 0;
-  mostrarTelaEscolha();
+function ciclo(agora) {
+  if (!s || !s.rodando) { return; }
+  const dt = Math.min(50, agora - s.ultimo);
+  s.ultimo = agora;
+  atualizar(dt);
+  desenhar();
+  if (s.rodando) { requestAnimationFrame(ciclo); }
 }
 
-mostrarTelaEscolha();
+function painel(titulo, estrelas, texto, botao, acao) {
+  $("resTitulo").textContent = titulo;
+  $("resEstrelas").textContent = estrelas;
+  $("resTexto").textContent = texto;
+  $("resBotao").textContent = botao;
+  $("resBotao").onclick = function () { $("resultado").classList.add("escondida"); acao(); };
+  $("resultado").classList.remove("escondida");
+}
+
+function fimLuta(venceu) {
+  s.rodando = false;
+  s.proj.forEach(function (t) { t.no.remove(); });
+  desenhar();
+  if (!venceu) {
+    tocar(300, 0.25, "triangle", 0);
+    tocar(200, 0.35, "triangle", 0.25);
+    painel("😴 Que pena!", "💖", "Você perdeu. Dica: troque de bichinho! Escolha quem tem 💪 contra o inimigo e desvie dos tiros.", "Tentar de novo 🔄", mostrarSelecao);
+    return;
+  }
+  const vida = s.p.hp / s.p.hpMax;
+  const est = vida >= 0.6 ? 3 : vida >= 0.3 ? 2 : 1;
+  [523, 659, 784, 1047].forEach(function (f, i) { tocar(f, 0.2, "triangle", i * 0.14); });
+  nBat += 1;
+  if (nBat >= BAT.length) {
+    painel("👑 CAMPEÃO! 👑", "🏆", "Você derrotou o Guardião Supremo e salvou o Reino dos Elementos!", "Jogar de novo 🔄", function () { nBat = 0; mostrarSelecao(); });
+  } else {
+    painel("🎉 Vitória!", "⭐".repeat(est), "Você terminou com " + Math.round(vida * 100) + "% de vida. Próximo reino: " + BAT[nBat].local + ".", "Próxima batalha ➡️", mostrarSelecao);
+  }
+}
+
+window.addEventListener("keydown", function (ev) {
+  const k = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
+  if (s && s.rodando) {
+    if ([" ", "ArrowUp", "ArrowDown"].indexOf(k) >= 0) { ev.preventDefault(); }
+    if ((k === "ArrowUp" || k === "w") && s.p.lane > 0) { s.p.lane -= 1; }
+    if ((k === "ArrowDown" || k === "s") && s.p.lane < 2) { s.p.lane += 1; }
+    if (k === "e") { especial(); }
+  }
+  teclas[k] = true;
+});
+
+window.addEventListener("keyup", function (ev) {
+  const k = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
+  teclas[k] = false;
+});
+
+$("btnJogar").addEventListener("click", function () { nBat = 0; mostrarSelecao(); });
 </script>
-
 </body>
 </html>
